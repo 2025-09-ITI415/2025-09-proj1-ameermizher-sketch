@@ -20,7 +20,7 @@ public class BallShooter : MonoBehaviour
 
     void Shoot()
     {
-        rb.velocity = Vector3.zero;
+        rb.linearVelocity = Vector3.zero;
         rb.AddForce(Camera.main.transform.forward * shootForce);
     }
 }
