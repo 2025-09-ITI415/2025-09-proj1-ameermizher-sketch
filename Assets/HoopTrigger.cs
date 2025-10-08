@@ -1,13 +1,25 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-public class HoopTrigger : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
-    private void OnTriggerEnter(Collider other)
+    public int score = 0;
+    public Text scoreText;
+
+    void Start()
     {
-        if (other.CompareTag("Ball"))
-        {
-            Debug.Log("Score!");
-            FindObjectOfType<GameManager>().AddScore(1);
-        }
+        UpdateScoreText();
+    }
+
+    public void AddScore(int value)
+    {
+        score += value;
+        UpdateScoreText();
+    }
+
+    void UpdateScoreText()
+    {
+        if (scoreText != null)
+            scoreText.text = "Score: " + score;
     }
 }
