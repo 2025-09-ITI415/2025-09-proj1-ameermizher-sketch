@@ -1,43 +1,52 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-using UnityEngine;
+[RequireComponent( typeof(Rigidbody) )]
 
-public class BasketballShooter : MonoBehaviour
-{
-    private Rigidbody rb;
-    private bool isHeld = false;
-    public float shootForce = 10f;
+public class BasketballShooter: MonoBehaviour{
+    const int LOOKBACK_COUNT = 10;
 
-    void Start()
-    {
-        rb = GetComponent<Rigidbody>();
+    [SerializeField]
+    private bool _awake = true;
+    public bool awake {
+        get { return _awake;}
+        private set {_awake = value;}
     }
 
-    void OnMouseDown()
-    {
-        isHeld = true;
-        rb.isKinematic = true;
+    private Vector3 prevPos;
+    private List<float> deltas = new List<float>();
+    private Rigidbody rigid;
+    // Start is called before the first frame update
+    void Start(){
+        rigid = GetComponent<Rigidbody>();
+        awake = true;
+        prevPos = new Vector3(1000,1000,0);
+        deltas.Add( 1000 );
     }
 
-    void OnMouseUp()
-    {
-        isHeld = false;
-        rb.isKinematic = false;
+    // Update is called once per frame
+    void FixedUpdate(){
+        if (rigid.isKinematic || !awake) return;
 
-        // Shoot forward and upward
-        rb.AddForce(new Vector3(0, 1, 1) * shootForce, ForceMode.Impulse);
-    }
+        Vector3 deltaV3 = transform.position - prevPos;
+        deltas.Add(deltaV3.magnitude);
+        prevPos = transform.position;
 
-    void Update()
-    {
-        if (isHeld)
-        {
-            // Make ball follow mouse position
-            Vector3 mousePos = Input.mousePosition;
-            mousePos.z = 10; // distance from camera
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(mousePos);
-            transform.position = worldPos;
+        while (deltas.Count > LOOKBACK_COUNT){
+            deltas.RemoveAt( 0 );
         }
+
+        float maxDelta =0;
+        foreach (float f in deltas){
+            if (f > maxDelta) maxDelta = f;
+        }
+
+        if (maxDelta <= Physics.sleepThreshold){
+            awake = false;
+            rigid.Sleep();
+        }
+
+
     }
 }
-

@@ -1,40 +1,76 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
-    using UnityEngine;
+public class Shooter : MonoBehaviour{
 
-public class Shooter : MonoBehaviour
-{
-    public GameObject basketballPrefab;   // Assign your ball prefab
-    public Transform ballSpawnPoint;      // Empty GameObject at shooter’s hand
-    public float shootForce = 10f;        // Strength of the throw
-    public Transform hoop;                // The target to aim at
+    [Header("Inscribed")]
+    public GameObject projectilePrefab;
+    public float velocityMult = 10f;
+    public GameObject projLinePrefab;
 
-    void Update()
-    {
-        // Left mouse button click to shoot
-        if (Input.GetMouseButtonDown(0))
-        {
-            Shoot();
-        }
+    [Header("Dynamic")]
+    public GameObject launchPoint;
+    public Vector3 launchPos;
+    public GameObject projectile;
+    public bool aimingMode;
+
+    void Awake(){
+        Transform launchPointTrans = transform.Find("LaunchPoint");
+        launchPoint = launchPointTrans.gameObject;
+        launchPoint.SetActive(false);
+        launchPos = launchPointTrans.position;
+    }
+ 
+ void OnMouseEnter(){
+    //print("Slingshot:OnMouseEnter()");
+    launchPoint.SetActive(true);
+ }
+
+ void OnMouseExit(){
+    //print("Slingshot:OnMouseExit()");
+    launchPoint.SetActive(false);
+ }
+
+ void OnMouseDown(){
+
+    aimingMode = true;
+
+    projectile = Instantiate(projectilePrefab) as GameObject;
+
+    projectile.transform.position = launchPos;
+
+    projectile.GetComponent<Rigidbody>().isKinematic = true;
+ }
+ void Update(){
+
+    if (!aimingMode) return;
+
+    Vector3 mousePos2D = Input.mousePosition;
+    mousePos2D.z = -Camera.main.transform.position.z;
+    Vector3 mousePos3D = Camera.main.ScreenToWorldPoint(mousePos2D);
+
+    Vector3 mouseDelta = mousePos3D -launchPos;
+
+    float maxMagnitude = this.GetComponent<SphereCollider>().radius;
+    if (mouseDelta.magnitude > maxMagnitude){
+        mouseDelta.Normalize();
+        mouseDelta*= maxMagnitude;
     }
 
-    void Shoot()
-    {
-        // Create the basketball
-        GameObject ball = Instantiate(basketballPrefab, ballSpawnPoint.position, Quaternion.identity);
+    Vector3 projPos = launchPos + mouseDelta;
+    projectile.transform.position = projPos;
 
-        // Add physics force
-        Rigidbody rb = ball.GetComponent<Rigidbody>();
+    if(Input.GetMouseButtonUp(0)){
 
-        if (rb != null && hoop != null)
-        {
-            // Direction from shooter to hoop
-            Vector3 direction = (hoop.position - ballSpawnPoint.position).normalized;
-
-            // Add upward arc to make it realistic
-            direction.y += 0.3f;
-
-            rb.AddForce(direction * shootForce, ForceMode.Impulse);
-        }
+        aimingMode = false;
+        Rigidbody projRB = projectile.GetComponent<Rigidbody>();
+        projRB.isKinematic = false;
+        projRB.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        projRB.linearVelocity = -mouseDelta * velocityMult;
+        Ground.POI = projectile;
+        Instantiate<GameObject>(projLinePrefab, projectile.transform);
+        projectile = null;
     }
+ }
 }
-
