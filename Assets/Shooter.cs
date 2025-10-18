@@ -6,7 +6,7 @@ public class Shooter : MonoBehaviour{
 
     [Header("Inscribed")]
     public GameObject projectilePrefab;
-    public float velocityMult = 10f;
+    public float velocityMult = 14f;
     public GameObject projLinePrefab;
 
     [Header("Dynamic")]
@@ -67,7 +67,7 @@ public class Shooter : MonoBehaviour{
         Rigidbody projRB = projectile.GetComponent<Rigidbody>();
         projRB.isKinematic = false;
         projRB.collisionDetectionMode = CollisionDetectionMode.Continuous;
-        projRB.linearVelocity = -mouseDelta * velocityMult;
+       projRB.linearVelocity = new Vector3(mouseDelta.x, mouseDelta.y, 0) * velocityMult;
         Ground.POI = projectile;
         Instantiate<GameObject>(projLinePrefab, projectile.transform);
         projectile = null;
